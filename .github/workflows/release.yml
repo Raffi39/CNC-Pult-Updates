@@ -1,0 +1,23 @@
+# Legt automatisch eine GitHub-Release an, sobald im Ordner release/ eine neue Version abgelegt wird.
+# Das Verbindungsprogramm findet die Release und aktualisiert sich selbst.
+name: Release veroeffentlichen
+on:
+  push:
+    branches: [main]
+    paths: ['release/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Release anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=$(tr -d ' \r\n' < release/VERSION)
+          if gh release view "v$V" >/dev/null 2>&1; then echo "v$V gibt es schon"; exit 0; fi
+          echo "SHA256: $(sha256sum release/CNC-Pult-Setup.exe | cut -d' ' -f1)" >> release/NOTES.md
+          gh release create "v$V" release/CNC-Pult-Setup.exe --title "CNC-Pult-Verbindung $V" --notes-file release/NOTES.md
