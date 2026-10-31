@@ -1,25 +1,37 @@
-### Verbindungstool 2026.10.31.5 – Handrad wie das Original, Nachlaufbegrenzung, Platinen mit Bauteilen
+### Verbindungstool 2026.10.31.6 – Handrad: Ebenen nach Farben (WXHC), Fn rastend, Override bei Achswahl OFF, Kopierschutz und Lizenzbedingungen
 
-- **Nachlaufbegrenzung im Schrittbetrieb**: Wird das Rad schneller gedreht, als die Achse fahren kann, liefen die
-  Rastungen auf und die Maschine fuhr nach dem Loslassen weiter. Jetzt liest das Programm bei jeder Rastung die
-  Maschinenposition und gibt nur so viele Rastungen weiter, dass das Ziel höchstens „Nachlauf höchstens“ (Vorgabe
-  1 mm, mindestens eine Rastung) vorauseilt – überzählige Rastungen werden verworfen (Hinweis im Protokoll).
-  Langsames Drehen bleibt exakt.
-- **Handrad-Abbildung nach dem Original**: Antenne, Display mit großen Ziffern (F/S in Prozent wie am Gerät),
-  RESET/Stop gelb, Start/Pause grün, POWER, zweifarbige Tasten (oben blau Macro-n = Fn-Belegung, unten orange
-  Funktion), großes Fn, Probe-Z und Macro-10 zwischen den Drehschaltern, Continuous/Step gelb, blaues MPG-Rad mit
-  Skala (dreht mit) und heller Griffscheibe. Belegung jeder Taste als Hinweis beim Darüberfahren.
-- **Display des Handrads**: F und S zeigen den Vorschub- bzw. Spindel-Override in Prozent.
-- **Verhalten wie das EdingCNC-Handrad einstellbar** (Vergleich mit docs.edingcnc.com/hardware/wireless-pendant):
-  - neue Funktion **„W-Home wie EdingCNC“**: Achswahl OFF = G0 X0 Y0, Achswahl X…C = Werkstücknull dieser Achse setzen;
-  - Haken **„Achswahl OFF: Stufenschalter stellt Vorschub-Override“** (2/5/10/30/60/100 % beim Umschalten);
-  - Haken **„CONTINUOUS / STEP schalten die Betriebsart des Rads“** – aus = frei belegbar;
-  - **„Einzelsatz“** mit Schaltart umschalten / nur ein / nur aus (wie Kühlung);
-  - Knopf **„Belegung wie EdingCNC-Handrad…“**: Stop = Pause, W-HOME wie Eding, Probe-Z = `xhc_probe_z`,
-    Fn + Taste = `xhc_macro_1…10`, Override ±5 %, CONTINUOUS/STEP = Einzelsatz aus/an, Achswahl OFF = Vorschub-Override.
-    Die CNC-Pult-Werkseinstellung bleibt über „Ganzes Handrad auf Werkseinstellung…“ erreichbar.
-- **Platinenbilder mit Bauteilen**: `gerber_vorschau.py` zeichnet jetzt auch die Bauteile aus Stückliste und CPL
-  (ICs, Widerstände, Kondensatoren, Dioden, Elko, Spule, Taster, Klemmen, Wannenstecker, USB-C, RJ45); Lage jedes
-  Bauteils an Lötpads bzw. Bohrungen abgeglichen.
+- **Ebenen nach Farben** (neu, Vorgabe beim WXHC): ohne Fn wirken die blauen Makros, mit Fn die orangen Funktionen
+  (Feed±, Spindle±, M-HOME, Safe-Z, W-HOME, S-ON/OFF, Probe-Z). Haken „Ohne Fn = blaue Makros, mit Fn = orange
+  Funktionen (WXHC)“; beim Umschalten wandert die Belegung der zweifarbigen Tasten mit. „Belegung wie EdingCNC-Handrad…“
+  stellt die Eding-Logik ein (ohne Fn orange, mit Fn Makros). Gespeicherte Belegungen älterer Versionen werden einmalig
+  passend getauscht. Abbildung, Tastennamen und Hinweise folgen der Einstellung.
+- **Freigabe des Handrads**: Echtbetrieb nur, solange eine **Original-Platine** angeschlossen ist (Original-Prüfung
+  bestanden), und noch **1 Stunde nach dem Abziehen**; danach nur Simulation. Keine dauerhafte Freigabe. Die
+  Original-Prüfung fragt die Platine jetzt mit einer an den PC gebundenen Frage (SHA-256 aus Windows-Maschinen-ID und
+  Zufall). **Testmodus**: Knopf „Testmodus 1 Stunde“ schaltet den Echtbetrieb jeweils für
+  eine Stunde frei (beliebig oft); danach wird der Handradbetrieb beendet.
+- **Direkttasten**: RESET, Stop, Start/Pause, Macro-10, Continuous und Step haben genau eine Funktion und wirken
+  mit und ohne Fn gleich (bisher blieb z. B. das Umschalten STEP/CONTINUOUS bei aktivem Fn ohne Wirkung). Die Fn-Ebene
+  gibt es nur noch für die zweifarbigen Tasten; eine Belegung von „Fn + Macro-10“ wird auf Macro-10 übernommen.
+- **Fn rastend** (Vorgabe an): einmal drücken = Fn an (Display zeigt „Fn“), nochmal = aus – am echten Handrad wie in
+  der Simulation; gehaltenes Fn wirkt weiterhin.
+- **Achswahl OFF**: Vorschub-Override, Spindel-Override und Lead (Einstellung des Stufenschalters) wirken jetzt in
+  **beiden** Betriebsarten – bisher im Dauerbetrieb (CONTINUOUS) nicht. Dauerbetrieb fährt nur mit gewählter Achse.
+- **Selbstprüfung des Programms** (Schutz gegen Veränderung): Das Programm prüft beim Start und regelmäßig seine
+  eigene Hersteller-Unterschrift (Authenticode, Aussteller „Kostka Engineering“; ist beim Bauen ein Zertifikat
+  vorhanden, wird zusätzlich dessen Fingerabdruck fest eingebaut und geprüft). Ist die Datei verändert oder nicht mehr
+  gültig unterschrieben, werden Handrad-Echtbetrieb und automatische Updates gesperrt (Hinweis im Protokoll und im
+  Reiter Handrad). Ein selbst gebautes Programm ohne Zertifikat wird nicht gesperrt.
+- **Platine im Betrieb erneut geprüft** (nur V5/V10): Die Original-Prüfung (Zufallsfrage, nur von der Original-Firmware
+  zu beantworten) wird nicht mehr nur beim Verbinden gestellt, sondern alle 2 Minuten wiederholt. Bleibt eine gültige
+  Antwort aus, gilt die Platine als nicht mehr echt und das Handrad wird gesperrt. V4 (ATmega) wird im Betrieb nicht
+  erneut geprüft (rechnet zu lange), die einmalige Prüfung beim Verbinden bleibt.
+- **Verschleierung** (optional): `build.cmd` verschleiert das Programm vor dem Signieren mit ConfuserEx (anti-ildasm,
+  Konstanten, Programmfluss), falls ConfuserEx unter `_lizenz\ConfuserEx\` liegt; sonst wird es übersprungen.
+- **Lizenzbedingungen**: Bei der Installation müssen die Bedingungen einmal bestätigt werden (Weitergabe und Verändern
+  untersagt, Betrieb nur mit Original-Platine, Gewährleistungs- und Haftungsausschluss, deutsches Recht). Sie sind im
+  Programm jederzeit unter Allgemein → Rechtliches → „Lizenzbedingungen anzeigen“ nachlesbar und liegen als
+  `LIZENZBEDINGUNGEN.txt` im Programmordner (auch im Startmenü). **Hinweis:** kein absoluter Schutz – ein Programm lässt
+  sich mit genügend Aufwand zerlegen; die Maßnahmen erhöhen die Hürde.
 
-SIGNATUR: 3D18F35B2253AEBFAB511920FA0140D92CC7EF3FBCD7B6F45584936BA12FEA67E0D5EDF621C0ABC0634E08F8454401220645287DD8C252C82709DF0BA7BF48F4
+SIGNATUR: C35DEEF130D5AFDBE6EEFF06A4430145E135CEEEAC23EB646EADDAF6CF244632D1875FA397E0BD6CD230F1468A0BF28A773AF1F14630A4F49063A1DB4846CBC3
