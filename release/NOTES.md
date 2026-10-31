@@ -1,5 +1,8 @@
-### Verbindungstool 2026.10.31.3 – Handrad: richtige Wege, Dauerbetrieb, neue Abbildung
+### Verbindungstool 2026.10.31.4 – Handrad: richtige Wege, Dauerbetrieb, neue Abbildung
 
+- Gleicher Inhalt wie 2026.10.31.3: Diese wurde versehentlich mit der Versionsnummer 2026.10.31.2 unterschrieben
+  (veraltete Hilfsdatei `_signieren.cmd` auf dem PC) und vom Programm zu Recht abgelehnt („Unterschrift ungültig“).
+  Jetzt richtig unterschrieben; die Unterschrift wird vor dem Veröffentlichen gegengeprüft.
 - **Weg je Rastung korrigiert**: Eding rechnet im Handradbetrieb mit „Schritte je Umdrehung“. Bisher wurde
   `handwheelCountPerRev` aus der server.ini übernommen (bei Raffi 400, gilt für ein Encoder-Handrad am Controller) –
   das WHB04B liefert aber 1 Zählschritt je Rastung (100 je Umdrehung), dadurch fuhr das Rad nur etwa ein Viertel des
@@ -24,4 +27,4 @@
 - **Simulation**: Drehschalter und Rad mit gedrückter Maustaste drehen (100 Rastungen je Umdrehung), Klick auf eine
   Schalterbeschriftung stellt den Schalter direkt dorthin.
 
-SIGNATUR: D732F8F56B734FD270E96999A9DE12D56D1E761BD58BDCAF49FDC73012EDCD1666EE7229326A7618084A8ADC831EA33739C08D0F1F681CE302C2551788A667F2
+SIGNATUR: 1FE18EEFC8279F766FE2AEC06C94232E6FCE0E50830AB57E77345E62D2C79C4F62B64481E0281AF776BD1A43E2556FB44402675798E2E3044904A99A466DE639
