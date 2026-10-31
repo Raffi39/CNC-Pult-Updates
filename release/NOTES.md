@@ -1,8 +1,10 @@
-### Verbindungstool 2026.10.31.7 – ausgeliefertes Programm verschleiert
+### Verbindungstool 2026.10.31.8 – periodische Platinenprüfung entfernt
 
-- **Verschleierung aktiv**: Das Programm wird jetzt mit ConfuserEx verschleiert ausgeliefert
-  (anti-ILDasm, Konstanten-Verschlüsselung, Programmfluss-Verschleierung). Zusammen mit der
-  Selbstprüfung der Unterschrift und der periodischen Platinenprüfung (aus 2026.10.31.6) ist das
-  Zerlegen und Verändern deutlich erschwert. Funktion und Bedienung sind unverändert.
+- **Platinenprüfung nur noch beim Verbinden**: Die alle 2 Minuten wiederholte Original-Prüfung
+  (nur V5/V10) wurde entfernt. Sie brachte wenig – eine Platine besteht die Prüfung ohne den echten
+  Firmware-Schlüssel ohnehin nicht – und barg das Risiko einer Fehlabschaltung mitten im Betrieb,
+  wenn Antworten ausbleiben. Die Prüfung beim Verbinden (und bei jedem Neuverbinden) bleibt; alle
+  Platinen – auch Controller V3.3/V3.4 – verhalten sich jetzt gleich. Verschleierung und
+  Selbstprüfung der Unterschrift bleiben unverändert.
 
-SIGNATUR: 8063E2B5B973506FE56D5A541EEA1DEF370EA3907F18B2058BDC56512F97A397E8B977F53D2A5D83C9039CB8F35DF8EC98F3014E32C814ADBC7FB51C3D430924
+SIGNATUR: 3A181622B4AFA6DEE3D6A3D8F6D922B6D8E1442F27C305899996420D38535FA8339145A74A06FEE9F062D7AC8AF3F421CB1C7DB3B2688AB15E9003BA3BF15AB4
