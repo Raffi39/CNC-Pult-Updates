@@ -1,23 +1,28 @@
-### Verbindungstool 2026.10.30.7 und Firmware 4.2 / 5.2 / 10.2 – Sicherheit und Lizenzen
+### Verbindungstool 2026.10.31.1 und Firmware 5.3 / 10.3 – kurzschlussfeste Ausgänge (Platinen V5.1 / V10.1)
 
-- **Updates ohne Zugangsschlüssel**: Das Update-Repository Raffi39/CNC-Pult-Updates ist öffentlich; der frühere
-  Lese-Schlüssel (`UpdateToken.cs`, `token_eintragen.py`) entfällt. `build.cmd` löscht eine noch vorhandene
-  `UpdateToken.cs`.
-- **Updates sind unterschrieben**: `release.py` unterschreibt jede Version mit dem Update-Schlüssel des Herstellers
-  (ECDSA P-256, privat nur in `_lizenz\Update-Schluessel\update_privat.blob`) und schreibt `SIGNATUR: …` in die
-  Release-Beschreibung. Das Programm installiert nur Versionen mit gültiger Unterschrift (öffentlicher Teil in
-  `UpdateKey.cs`). Unterschrieben ist `CNCPULT-UPDATE1:<Version>:<SHA-256 der Setup-Datei>`.
-- **Hersteller-Werkzeug** `Quelltext\Werkzeug\Werkzeug.exe` (baut `build.cmd`, nur PC): Update-Schlüssel anlegen,
-  Updates unterschreiben, Firmware verschlüsselt einbauen. Neues Skript `06_Firmware\firmware_bauen.ps1` baut alle
-  Firmwares mit arduino-cli und baut sie ins Programm ein.
-- **Netzwerk geschützt (Controller V5/V10, Firmware 5.2 / 10.2)**: Ethernet ist ab Werk aus. Im Reiter Platinen
-  „Netzwerkbetrieb freischalten“ erzeugt das Programm einen Kopplungsschlüssel und überträgt ihn per USB (`NK`).
-  Jede Netzwerkverbindung meldet sich mit HMAC-SHA256 an (`Y …`, beide Seiten prüfen sich); unangemeldete
-  Verbindungen bekommen keine Daten und können eine bestehende Verbindung nicht mehr verdrängen.
-  `N?` meldet zusätzlich, ob das Netzwerk freigeschaltet ist. Ältere Firmware wird im Netzwerk abgelehnt.
-- **Firmware 4.2 / 5.2**: eigener WS2812-LED-Treiber (`ws2812_avr.h`, `ws2812_pio.h`) statt der Bibliothek
-  „Adafruit NeoPixel“ (LGPL-3.0). Firmware 10.2: nur Netzwerkschutz.
-- Die im Programm enthaltenen Firmware-Dateien werden erst mit `firmware_bauen.ps1` auf 4.2 / 5.2 / 10.2
-  aktualisiert (braucht den Firmware-Schlüssel auf dem PC).
+- **Verbindungstool**: kennt die Platinen **V5.1** (neues Profil, gleiche Tasten wie V5.0) und **V10.1**
+  (Kennung `B10.1`, Profil V10). Die Meldung `F 1`/`F 0` der V10.1 wird im Zustand der Platine angezeigt
+  („LED-Treiber meldet Überstrom/unbelegte Klemme“). Die enthaltene Firmware 5.3/10.3 wird **nur auf
+  Platinen ab V5.1/V10.1** aufgespielt (andere Treiber und Anschlüsse); meldet eine Platine B5.0/B10.0, wird
+  kein Update angeboten und das manuelle Aufspielen abgelehnt.
+- **Controller V10.1**: LED-Treiber TPIC6B595 durch **TI DRV8860** ersetzt (8 kurzschlussfeste Low-Side-Ausgänge je
+  Baustein, Überstrom-/Übertemperaturabschaltung, Erkennung offener Last). Pegelwandler 74AHCT1G125 entfallen,
+  die Kette hängt direkt am RP2040 (DIN GPIO3, CLK GPIO4, LATCH GPIO5). **ENABLE GPIO6 ist jetzt aktiv HIGH**
+  (Pull-down, LEDs beim Start aus), Helligkeit per PWM 500 Hz an ENABLE. Neu **nFAULT GPIO7** nur als Hinweis:
+  Meldung `F 1` / `F 0` an den PC bei Änderung (höchstens 1× je Sekunde), die LEDs bleiben an – der DRV8860
+  meldet an jedem ausgeschalteten, unbelegten Ausgang „offene Last“, nFAULT ist bei nicht voll belegten
+  Klemmen also dauerhaft LOW. Die Überstrom-Sperre wird alle 2 s durch kurzes Schreiben von 0 gelöscht
+  (ca. 0,4 ms, unsichtbar). Kennung `B10.1` (auch Antwort auf `?`). CLK/LATCH/DIN mit 2 mA Treiberstärke
+  (lange Leitungen). Zeiten laut Datenblatt (CLK ≥ 5 µs).
+- Vor Neustart/Bootloader werden die Ausgänge abgeschaltet (V5 und V10); V5 bekommt einen 4-s-Watchdog
+  (ENABLE liegt bei V5.1 fest an 3,3 V).
+- **Controller V5.1 (Layout V9)**: Ausgänge OUT1–8 über **einen DRV8860** statt 74HC595 + 2× TPS4H160, damit
+  **masseschaltend wie V10** (Klemmen J8/J9: „+“ = VIN über Polyfuse, „Ln“ = nach GND geschaltet). Die
+  **M22-Eingänge J4** werden wie bei V10 gelesen: Taster gegen GND, 4k7/10k/10 nF, **74HC165** an GPIO23; Takt und
+  Laden teilen sich CLK/LATCH des DRV8860 (LATCH invertiert auf /PL). Jede Millisekunde ein Zyklus: 8 Bit Ausgänge
+  schreiben, dabei 8 Eingänge lesen, dann LATCH. Alle 2 s ein Zyklus mit Ausgängen = 0, damit ein
+  kurzgeschlossener Ausgang nach Behebung wieder einschaltet. Zeilen R0–R3 bleiben für die Tastenmodule
+  (Tasten 0–55), M22 = Tasten 56–63 wie bisher. Kennung `B5.1`.
+- Noch nicht auf Hardware getestet (Platinen V5.1/V10.1 in Fertigung).
 
-SIGNATUR: E2F19A717A175931B18ACCD54D8775FFD142B559F02EBC3F551E0231195C3CF6FE99AAF5E297FB2D0337A71ED6AF79628C3CD68461064266D0E37B9AF8CE0C14
+SIGNATUR: C449AA34069682F2AD51830AF49F26809698962DA8C4E785B3381D78BA30485D9A866BE8CA240339B64634A99D23DB826AA4937341EE6191903E029C6B183686
