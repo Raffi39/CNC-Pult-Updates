@@ -1,26 +1,27 @@
-### Verbindungstool 2026.10.31.2 – Funk-Handrad XHC WHB04B-6, Schaltart für Kühlung
+### Verbindungstool 2026.10.31.3 – Handrad: richtige Wege, Dauerbetrieb, neue Abbildung
 
-- **Neuer Reiter „Handrad“** für das Funk-Handrad XHC **WHB04B-6** (USB-Empfänger 10CE:EB93, HID ohne Treiber;
-  Kennung im Reiter änderbar). Abbildung des Handrads mit Anzeige (Position X/Y/Z bzw. A/B/C, F, S), Tasten,
-  Achswahl, Stufenschalter und Rad; gedrückte Tasten rot, laufende Sicherheitszeit orange, Rohdaten zur Fehlersuche.
-  **Tasten belegen** durch Anklicken in der Abbildung (Haupt- und Fn-Belegung MACRO-1 … MACRO-10), dieselben
-  Funktionen wie die Pult-Tasten inkl. Sicherheitszeit; Dauer-Verfahren über Tasten ist am Handrad gesperrt.
-  **Simulation** auf derselben Seite (Betrieb „Simulation“): Tasten, Schalter und Rad in der Abbildung bedienen.
-- **Rad**: Verfahren über den **Handradbetrieb von EdingCNC** (`CncStartHandweelTracking` /
-  `CncSetTrackingHandwheelCounter` / `CncStopTracking`) mit denselben Werten wie Edings eigene Anwendung
-  `WirelessPendant.exe` (Achs-Höchstgeschwindigkeit aus `CncGetJointConfig`, Schritte/Umdrehung und Stufenwert aus
-  `CncGetHandwheelConfig`, Wegfaktor 0,1/1/10/100 für 0,001/0,01/0,1/1 mm; ×25,4 bei Zoll für X/Y/Z).
-  Je Stellung des Stufenschalters einstellbar: Schrittweite, Vorschub- oder Spindel-Override (Schritt je Rastung
-  einstellbar) oder nichts. Kein Handradbetrieb während ein Programm läuft oder bei Not-Halt; Achswahl OFF,
-  Abziehen des Empfängers, Betriebswechsel und Programmende beenden ihn. Achsumkehr (Reiter Allgemein) gilt auch für das Rad.
-- **Display des Handrads** wird beschrieben (3 Feature-Reports, Werkstück- oder Maschinenkoordinaten wählbar).
-- Warnung, wenn gleichzeitig „MektriX x EdingCNC“ oder `WirelessPendant.exe` läuft.
-- `Eding.cs`: neu `CncGetWorkPosition`, `CncGetMachinePosition` (Rückgabe über versteckten Zeiger, „ret 4“),
-  `CncGetActualFeed`, `CncGetActualSpeed`, `CncInMillimeterMode`, Handrad-Funktionen (Parametergrößen aus „ret n“ geprüft).
-- **Kühlung Flut / Nebel mit Schaltart**: umschalten (wie bisher, Vorgabe), nur einschalten (M8/M7) oder nur
-  ausschalten (M9 – schaltet in EdingCNC alle Kühlungen aus). Bestehende Belegungen bleiben „umschalten“.
-- Neue Funktionen für alle Tasten: „Programm Start / Pause (umschalten)“ und „Spindel ein/aus (M3/M5)“.
-- Selbsttest (`/selbsttest`): Handrad in Simulation, Bild des Handrad-Reiters, Prüfung der Anzeige-Kodierung.
-- Noch nicht mit echtem Handrad getestet (Tastencodes nach LinuxCNC-Treiber `xhc-whb04b-6`).
+- **Weg je Rastung korrigiert**: Eding rechnet im Handradbetrieb mit „Schritte je Umdrehung“. Bisher wurde
+  `handwheelCountPerRev` aus der server.ini übernommen (bei Raffi 400, gilt für ein Encoder-Handrad am Controller) –
+  das WHB04B liefert aber 1 Zählschritt je Rastung (100 je Umdrehung), dadurch fuhr das Rad nur etwa ein Viertel des
+  Wegs. Jetzt fest 100 Schritte je Umdrehung: 0,001 / 0,01 / 0,1 / 1 mm je Rastung.
+- **Schrittbetrieb exakt** (neu, Vorgabe an): immer Positionsmodus. Bisher galt der Geschwindigkeitsmodus aus der
+  Eding-Einstellung (`handwheelX100VelMode = 1`), der bei 1 mm Wege abbricht, sobald das Rad steht.
+  Abschaltbar; dazu ein **Wegfaktor** zum Abgleichen (Vorgabe 1,000).
+- **Dauerbetrieb (Taste CONTINUOUS)**: die Achse fährt mit 2 / 5 / 10 / 30 / 60 / 100 % der Höchstgeschwindigkeit
+  (Stellung des Stufenschalters), solange das Rad gedreht wird; 300 ms ohne Rastung = Halt (Totmann, auch bei
+  Funkabbruch). **STEP** schaltet zurück auf Schrittbetrieb. CONTINUOUS/STEP sind dafür fest, ihre Fn-Ebene
+  (MACRO-15/16) bleibt belegbar. Stop, Reset und Not-Halt beenden den Dauerbetrieb.
+- **Abbildung wie das echte Gerät**: Tasten 4 × 4 in der Reihenfolge der Tastencodes (RESET oben links …
+  MACRO-10 unten rechts), orange Haupt- und blaue Fn-Beschriftung (MACRO-1 … MACRO-16), LCD mit WC/MC,
+  STP/CONT, Achsstern, F/S; Drehschalter mit Rastmarken, MPG-Rad mit Skala 0–100 und Griffmulde.
+- **Programmfenster** öffnet höher (bis 890 Pixel Innenhöhe, begrenzt auf den Bildschirm), damit die
+  Handrad-Abbildung ohne Scrollen ganz sichtbar ist.
+- **Reiter „Tasten und LEDs“**: unter den Tasten eine gerenderte Ansicht der gewählten Platine (V3.3, V3.4, V5.1, V10:
+  Lötstopplack, Pads, Bestückungsdruck, Bohrungen – kein Leiterbahn-Layout). Erzeugt aus den Gerber-Daten mit dem neuen
+  Werkzeug `08_Werkzeuge_Platinen\gerber_vorschau.py`, eingebettet aus `Quelltext\Bilder\platine_*.png` (`build.cmd` ergänzt).
+- **Controller V5.0 entfernt** (wurde nie gefertigt): Profil gestrichen; Einstellungen und Kennungen mit V5.0
+  werden als V5.1 übernommen.
+- **Simulation**: Drehschalter und Rad mit gedrückter Maustaste drehen (100 Rastungen je Umdrehung), Klick auf eine
+  Schalterbeschriftung stellt den Schalter direkt dorthin.
 
-SIGNATUR: 501F619ECAEE9C5DCB80AFBF31B1FFF3ED894169F16E598DC844C58C157845DDEF947F065DD569DBA2B68DD2B3353FA25102C3DA66E8F4694F605134F1C6FB2B
+SIGNATUR: D732F8F56B734FD270E96999A9DE12D56D1E761BD58BDCAF49FDC73012EDCD1666EE7229326A7618084A8ADC831EA33739C08D0F1F681CE302C2551788A667F2
