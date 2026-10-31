@@ -1,28 +1,26 @@
-### Verbindungstool 2026.10.31.1 und Firmware 5.3 / 10.3 – kurzschlussfeste Ausgänge (Platinen V5.1 / V10.1)
+### Verbindungstool 2026.10.31.2 – Funk-Handrad XHC WHB04B-6, Schaltart für Kühlung
 
-- **Verbindungstool**: kennt die Platinen **V5.1** (neues Profil, gleiche Tasten wie V5.0) und **V10.1**
-  (Kennung `B10.1`, Profil V10). Die Meldung `F 1`/`F 0` der V10.1 wird im Zustand der Platine angezeigt
-  („LED-Treiber meldet Überstrom/unbelegte Klemme“). Die enthaltene Firmware 5.3/10.3 wird **nur auf
-  Platinen ab V5.1/V10.1** aufgespielt (andere Treiber und Anschlüsse); meldet eine Platine B5.0/B10.0, wird
-  kein Update angeboten und das manuelle Aufspielen abgelehnt.
-- **Controller V10.1**: LED-Treiber TPIC6B595 durch **TI DRV8860** ersetzt (8 kurzschlussfeste Low-Side-Ausgänge je
-  Baustein, Überstrom-/Übertemperaturabschaltung, Erkennung offener Last). Pegelwandler 74AHCT1G125 entfallen,
-  die Kette hängt direkt am RP2040 (DIN GPIO3, CLK GPIO4, LATCH GPIO5). **ENABLE GPIO6 ist jetzt aktiv HIGH**
-  (Pull-down, LEDs beim Start aus), Helligkeit per PWM 500 Hz an ENABLE. Neu **nFAULT GPIO7** nur als Hinweis:
-  Meldung `F 1` / `F 0` an den PC bei Änderung (höchstens 1× je Sekunde), die LEDs bleiben an – der DRV8860
-  meldet an jedem ausgeschalteten, unbelegten Ausgang „offene Last“, nFAULT ist bei nicht voll belegten
-  Klemmen also dauerhaft LOW. Die Überstrom-Sperre wird alle 2 s durch kurzes Schreiben von 0 gelöscht
-  (ca. 0,4 ms, unsichtbar). Kennung `B10.1` (auch Antwort auf `?`). CLK/LATCH/DIN mit 2 mA Treiberstärke
-  (lange Leitungen). Zeiten laut Datenblatt (CLK ≥ 5 µs).
-- Vor Neustart/Bootloader werden die Ausgänge abgeschaltet (V5 und V10); V5 bekommt einen 4-s-Watchdog
-  (ENABLE liegt bei V5.1 fest an 3,3 V).
-- **Controller V5.1 (Layout V9)**: Ausgänge OUT1–8 über **einen DRV8860** statt 74HC595 + 2× TPS4H160, damit
-  **masseschaltend wie V10** (Klemmen J8/J9: „+“ = VIN über Polyfuse, „Ln“ = nach GND geschaltet). Die
-  **M22-Eingänge J4** werden wie bei V10 gelesen: Taster gegen GND, 4k7/10k/10 nF, **74HC165** an GPIO23; Takt und
-  Laden teilen sich CLK/LATCH des DRV8860 (LATCH invertiert auf /PL). Jede Millisekunde ein Zyklus: 8 Bit Ausgänge
-  schreiben, dabei 8 Eingänge lesen, dann LATCH. Alle 2 s ein Zyklus mit Ausgängen = 0, damit ein
-  kurzgeschlossener Ausgang nach Behebung wieder einschaltet. Zeilen R0–R3 bleiben für die Tastenmodule
-  (Tasten 0–55), M22 = Tasten 56–63 wie bisher. Kennung `B5.1`.
-- Noch nicht auf Hardware getestet (Platinen V5.1/V10.1 in Fertigung).
+- **Neuer Reiter „Handrad“** für das Funk-Handrad XHC **WHB04B-6** (USB-Empfänger 10CE:EB93, HID ohne Treiber;
+  Kennung im Reiter änderbar). Abbildung des Handrads mit Anzeige (Position X/Y/Z bzw. A/B/C, F, S), Tasten,
+  Achswahl, Stufenschalter und Rad; gedrückte Tasten rot, laufende Sicherheitszeit orange, Rohdaten zur Fehlersuche.
+  **Tasten belegen** durch Anklicken in der Abbildung (Haupt- und Fn-Belegung MACRO-1 … MACRO-10), dieselben
+  Funktionen wie die Pult-Tasten inkl. Sicherheitszeit; Dauer-Verfahren über Tasten ist am Handrad gesperrt.
+  **Simulation** auf derselben Seite (Betrieb „Simulation“): Tasten, Schalter und Rad in der Abbildung bedienen.
+- **Rad**: Verfahren über den **Handradbetrieb von EdingCNC** (`CncStartHandweelTracking` /
+  `CncSetTrackingHandwheelCounter` / `CncStopTracking`) mit denselben Werten wie Edings eigene Anwendung
+  `WirelessPendant.exe` (Achs-Höchstgeschwindigkeit aus `CncGetJointConfig`, Schritte/Umdrehung und Stufenwert aus
+  `CncGetHandwheelConfig`, Wegfaktor 0,1/1/10/100 für 0,001/0,01/0,1/1 mm; ×25,4 bei Zoll für X/Y/Z).
+  Je Stellung des Stufenschalters einstellbar: Schrittweite, Vorschub- oder Spindel-Override (Schritt je Rastung
+  einstellbar) oder nichts. Kein Handradbetrieb während ein Programm läuft oder bei Not-Halt; Achswahl OFF,
+  Abziehen des Empfängers, Betriebswechsel und Programmende beenden ihn. Achsumkehr (Reiter Allgemein) gilt auch für das Rad.
+- **Display des Handrads** wird beschrieben (3 Feature-Reports, Werkstück- oder Maschinenkoordinaten wählbar).
+- Warnung, wenn gleichzeitig „MektriX x EdingCNC“ oder `WirelessPendant.exe` läuft.
+- `Eding.cs`: neu `CncGetWorkPosition`, `CncGetMachinePosition` (Rückgabe über versteckten Zeiger, „ret 4“),
+  `CncGetActualFeed`, `CncGetActualSpeed`, `CncInMillimeterMode`, Handrad-Funktionen (Parametergrößen aus „ret n“ geprüft).
+- **Kühlung Flut / Nebel mit Schaltart**: umschalten (wie bisher, Vorgabe), nur einschalten (M8/M7) oder nur
+  ausschalten (M9 – schaltet in EdingCNC alle Kühlungen aus). Bestehende Belegungen bleiben „umschalten“.
+- Neue Funktionen für alle Tasten: „Programm Start / Pause (umschalten)“ und „Spindel ein/aus (M3/M5)“.
+- Selbsttest (`/selbsttest`): Handrad in Simulation, Bild des Handrad-Reiters, Prüfung der Anzeige-Kodierung.
+- Noch nicht mit echtem Handrad getestet (Tastencodes nach LinuxCNC-Treiber `xhc-whb04b-6`).
 
-SIGNATUR: C449AA34069682F2AD51830AF49F26809698962DA8C4E785B3381D78BA30485D9A866BE8CA240339B64634A99D23DB826AA4937341EE6191903E029C6B183686
+SIGNATUR: 501F619ECAEE9C5DCB80AFBF31B1FFF3ED894169F16E598DC844C58C157845DDEF947F065DD569DBA2B68DD2B3353FA25102C3DA66E8F4694F605134F1C6FB2B
