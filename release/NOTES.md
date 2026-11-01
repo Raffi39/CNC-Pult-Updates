@@ -1,10 +1,13 @@
-### Verbindungstool 2026.10.31.8 – periodische Platinenprüfung entfernt
+### Verbindungstool 2026.11.01.1 – LED je Achse/Richtung, Poti-Kalibrierung
 
-- **Platinenprüfung nur noch beim Verbinden**: Die alle 2 Minuten wiederholte Original-Prüfung
-  (nur V5/V10) wurde entfernt. Sie brachte wenig – eine Platine besteht die Prüfung ohne den echten
-  Firmware-Schlüssel ohnehin nicht – und barg das Risiko einer Fehlabschaltung mitten im Betrieb,
-  wenn Antworten ausbleiben. Die Prüfung beim Verbinden (und bei jedem Neuverbinden) bleibt; alle
-  Platinen – auch Controller V3.3/V3.4 – verhalten sich jetzt gleich. Verschleierung und
-  Selbstprüfung der Unterschrift bleiben unverändert.
+- **LED „Achse wird verfahren“ / „Handrad aktiv“ mit Achswahl**: Hinter der Quelle lässt sich jetzt
+  „alle Achsen“, „X (beide Richtungen)“, „X+“, „X–“ … bis „C–“ wählen. Die Richtung wird aus der
+  Maschinenposition ermittelt (alle 100 ms, solange EdingCNC Verfahren bzw. Handrad meldet) – damit
+  wirkt es auch beim Verfahren über die EdingCNC-Oberfläche. Beim Dauer-Verfahren vom Pult leuchtet die
+  LED sofort. Nach dem Stillstand ca. 0,3 s Nachleuchten. Bestehende Einstellungen bleiben „alle Achsen“.
+- **Poti-Kalibrierung je Platine**: Reiter Platinen → „Potis kalibrieren …“ zeigt die Rohwerte live;
+  „0 % übernehmen“ / „100 % übernehmen“ lernen die Anschläge der Potis dieser Platine ein (Ausgleich von
+  Bauteiltoleranzen, Sicherheitsabstand 6 von 1023, verkehrt angeschlossene Potis werden umgedreht).
+  Gilt nur im Echtbetrieb; „Duplizieren“ übernimmt die Kalibrierung nicht. Firmware unverändert.
 
-SIGNATUR: 3A181622B4AFA6DEE3D6A3D8F6D922B6D8E1442F27C305899996420D38535FA8339145A74A06FEE9F062D7AC8AF3F421CB1C7DB3B2688AB15E9003BA3BF15AB4
+SIGNATUR: E57FBBB534BD9A4869BCD9C7EE34EA0779F684B90D23B61522BFDBD9C57A06CD5D91F9769576986DA895B7106773D1208EE22B03BC8827E4A00FD99F45EB56EE
