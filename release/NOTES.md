@@ -1,108 +1,52 @@
-### Firmware 4.6 (Controller V3.x) und 5.4 (Controller V5) – LEDs aus ohne Verbindungsprogramm [in Arbeit]
+### Verbindungstool 2026.11.06.2 und Firmware 4.7 / 5.5 / 10.4 / 15.3 – ruhige Potis [in Arbeit]
 
-- Ohne Lebenszeichen vom Verbindungsprogramm (1,5 s, z. B. Programm geschlossen) bleiben alle LEDs aus.
-  Bisher pulsierten sie langsam gedimmt blau. Ausgänge sind wie bisher aus.
-- 4.6 enthält alle Änderungen von 4.5 (Update ohne RESET-Taste).
+- **Fehler (gemeldet von Raffi am 06.11.2026, 10-kΩ-Poti am Controller V3.3, Kabel ca. 10 cm)**: Der Rohwert des
+  Potis sprang am Anschlag zwischen etwa 10 und 40. Die Firmware sendete je 50 ms einen einzelnen ADC-Wert; die
+  Schwelle von 4 griff dadurch nie, der Override in EdingCNC zitterte um etwa ±2 %.
+- **Firmware (alle Controller, gleiche Datei `pult_pot.h`)**: je Poti und Zyklus eine Messung nach dem Kanalwechsel
+  verwerfen, 16 Messungen, die 2 kleinsten und 2 größten weglassen, Rest mitteln; danach gleitender Mittelwert
+  (1/4 je Zyklus, ca. 0,2 s), bei einer Änderung von mehr als 32 Schritten (Poti wird gedreht) sofort folgen.
+  Gesendet wird bei Änderung um mehr als 2 Schritte und weiter alle 500 ms. Protokoll unverändert.
+  Rechnertest mit nachgebildetem Rauschen (±15 und 2 % Störspitzen um ±120): Ausgabe ruhig ±2–3 Schritte,
+  keine Meldungen im Stillstand, Drehen 0→1000 in 1 s folgt ohne Verzögerung.
+- **Verbindungstool**: Hysterese auf den Prozentwert – ein neuer Override-Wert gilt erst, wenn das Poti um mehr
+  als 0,6 % von der aktuellen Stufe weg ist; an den Anschlägen sofort. Kein Pendeln zwischen zwei Nachbarwerten.
+- **SICHERHEIT – Achse fuhr weiter (gemeldet von Raffi am 06.11.2026)**: Y− im Dauerbetrieb halten, schnell X−
+  dazu drücken, loslassen → Tastenmodul dunkel und ohne Reaktion, die Maschine fuhr einige Sekunden weiter, danach
+  LEDs wieder an und Stillstand. Controller blieb verbunden. **Ursache**: Der Ablauf des Verbindungstools (ein Thread
+  für Tasten, EdingCNC, LEDs und Lebenszeichen) hing einige Sekunden – vermutlich in einem Aufruf an EdingCNC.
+  Ohne Lebenszeichen schaltete die Firmware (ab 4.6) nach 1,5 s die LEDs ab; das Loslassen der Taste und die
+  0,4-s-Prüfung wurden erst nach dem Hängen verarbeitet. **Messung (Protokoll Raffi, 20:49)**: CncStopJog dauert
+  in EdingCNC etwa 200 ms, CncStartJog2 bis 850 ms – die Aufrufe warten, bis EdingCNC sie verarbeitet hat.
+  **Behebung**:
+  - Eigener Verfahr-Ablauf: Der Hauptablauf legt je Achse nur noch den Wunsch fest (fahren mit Richtung/Tempo oder
+    stehen) und wartet nie auf EdingCNC. Der Verfahr-Ablauf bringt EdingCNC auf den jeweils neuesten Wunsch;
+    Stopps haben Vorrang (vor jedem Start werden fällige Stopps gesendet), ein überholter Start wird nicht mehr
+    gesendet. Schritte der Reihe nach, höchstens 3 offen. Gilt für Tasten, Eilgang/Tempowechsel und Handrad-Dauerbetrieb.
+  - Lebenszeichen, LEDs, Loslassen und die 0,4-s-Prüfung laufen dadurch ohne Unterbrechung weiter.
+  - Sicherheits-Thread: hängt der Hauptablauf trotzdem länger als 400 ms, während eine Achse fährt, wird über den
+    Verfahr-Ablauf alles gestoppt („SICHERHEIT: Ablauf hängt …“); weiter nur mit neuem Tastendruck.
+  - Diagnose: Verfahrbefehle, die länger als 500 ms dauern, stehen mit Dauer im Protokoll.
+  - Beim Beenden des Programms werden alle Achsen direkt gestoppt.
+  Bleibt in Prüfung, bis Raffi den Ablauf an der Maschine bestätigt hat. Not-Halt ist hart verdrahtet und unabhängig.
+- **Raststelle (neu, Wunsch Raffi)**: Reiter **Allgemein** → **Override-Potis**: je Poti (Vorschub/Spindel)
+  abschaltbar „mit Raststelle bei … % ± … %“ (Vorgabe aus, 100 % ± 3 %). Im Bereich gilt genau der eingestellte
+  Wert. Auch der Simulationsregler zeigt den Wert mit Raststelle. Alte Einstellungen: Raststelle aus.
+- Die neuen Firmwares sind im Programm enthalten und werden beim Verbinden zum Update angeboten.
+- Auf echter Hardware noch zu bestätigen (V3.3 mit Poti).
 
-### Verbindungstool – Eilgang nur solange die Taste gedrückt ist [in Arbeit]
+### Verbindungstool – Update-Quelle wird nicht mehr angezeigt [in Arbeit]
 
-- Eilgang-Taste während des Verfahrens drücken → die Achse wird sofort schneller; loslassen → sofort zurück auf die
-  eingestellte Stufe. Bisher galt die Geschwindigkeit vom Beginn der Bewegung bis zum Loslassen der Achstaste
-  (Eilgang danach gedrückt: keine Wirkung; Eilgang vorher gedrückt und losgelassen: blieb im Eilgang).
-- Ebenso wirkt ein Wechsel der Tempostufe (langsam/mittel/schnell) jetzt sofort auf eine laufende Bewegung.
-- Technik: EdingCNC übernimmt den Geschwindigkeitsfaktor nur beim Start einer Bewegung, deshalb wird die laufende
-  kontinuierliche Bewegung mit dem neuen Faktor neu gestartet (gleiche Achse, Richtung, Taste). Schrittbewegungen
-  laufen mit ihrem Faktor zu Ende.
+- Reiter **Allgemein** → **Updates**: Der Hinweis lautet nur noch „Vor jedem Update werden die Einstellungen in den
+  Ordner „Sicherungen“ kopiert.“ – die Angabe „Quelle: github.com/…“ entfällt (Wunsch Raffi, 06.11.2026).
+  Die Update-Prüfung selbst ist unverändert (`MainForm.cs`).
 
-### Verbindungstool – Hintergrund- und Status-Helligkeit getrennt einstellbar [in Arbeit]
+### Verbindungstool – Treiberanleitung für den DFU-Bootloader (Controller V3.x) [in Arbeit]
 
-- Farbige Platinen (V3.x, V5): Reiter **Platinen** → „Hintergrund (%)“ stellt nur noch die Hintergrundbeleuchtung ein.
-  Unter **Tasten und LEDs** hat „Status EIN“ und „Status AUS“ je Taste ein eigenes Feld „Hell. %“ (für Leuchten und
-  Blinken; das Aufleuchten beim Drücken nutzt die Helligkeit von „Status EIN“).
-- Technik: Die Firmware läuft bei farbigen Platinen fest mit Höchsthelligkeit (H 120), das Programm dunkelt die
-  Farbwerte ab. Keine Firmware-Änderung nötig. Die Bildschirmvorschau zeigt weiter die vollen Farben.
-- Alte Einstellungen sehen unverändert aus: Solange nichts neu eingestellt ist, gilt die frühere Platinenhelligkeit
-  (z. B. 40 von 120 = 33 %) für Hintergrund und Status.
-- Einfarbige Platinen (V10, V15): wie bisher eine gemeinsame Helligkeit (0–120) im Reiter Platinen – die Hardware
-  dimmt alle Ausgänge gemeinsam, eine getrennte Status-Helligkeit ist dort nicht möglich.
+- Neue Anleitung `07_Verbindungsprogramm/TREIBER_DFU_Controller_V3.txt` (für Tester mit Controller V3.3):
+  WinUSB-Treiber für „ATm32U4DFU“ (03EB:2FF4) einmalig je PC mit Zadig oder QMK Toolbox, Fehlerbehebung.
+- `ANLEITUNG.txt`: neuer Abschnitt „Treiber für den DFU-Bootloader“, Firmware-Update V3.x ohne RESET-Taste
+  (ab 4.5), Hinweis zu „Tool change area violation“ (Meldung von EdingCNC, tritt auch ohne Pult auf),
+  Stand 06.11.2026. Kommt mit dem nächsten Setup ins Programmpaket (ANLEITUNG.txt ist im Setup enthalten).
 
-### Firmware V15 15.2, Modul-Firmware 1.4 (E8/E16/O8) und Verbindungstool – Erweiterungsmodule [in Arbeit]
-
-- **Modul-Firmware 1.4 (06.11.2026) für die geänderte O8-Platine** (Q60/R602, siehe PRUEFBERICHT_O8_V1):
-  - /OE der Schieberegister jetzt über den MOSFET Q60: GPIO6 HIGH = Ausgänge frei. Beim Start bleibt GPIO6 LOW
-    (Gate-Pull-down R601), erst Nullen schieben, dann freigeben – kein Einschaltimpuls beim Hochlaufen.
-    **1.4 nur auf O8 mit Q60 verwenden** (auf einer alten O8 ohne Q60 wären die Ausgänge gesperrt).
-  - Lastspannungsüberwachung: 9. Messplatz mit allen DEN aus misst VLOAD über R602 (330 kΩ; R603 entlädt VLOAD, D23 jetzt M7 mit kleinem Sperrstrom). Bewertet wird der Sprung: „fehlt“ bei Abfall um mehr als ca. 12 V gegenüber dem Wert mit Lastspannung, „wieder da“ bei Anstieg um mehr als ca. 16 V gegenüber dem Wert ohne; beide Bezugswerte folgen nur mit ca. 2 mV/s. So täuscht der (langsam veränderliche) Sperrstrom der Klemmdiode D430 keine Lastspannung vor, und auch ein langsames Abklingen nach Not-Halt (C500 über R603, ca. 1 s) wird erkannt (zwei unabhängige Prüfungen). Fehlt die Lastspannung
-    (Not-Halt, Sicherung), gehen alle Ausgänge aus, LED FEHLER an, Status Bit 3. Kehrt sie zurück, bleibt alles
-    aus (kein Wiederanlauf von selbst), bis „O8-Sperren aufheben“ gedrückt wird oder 3 s lang kein Ausgang
-    angefordert ist. Gilt auch nach dem Start des Moduls (Anlaufsperre).
-  - Laststrom: der R602-Grundwert (ca. 195 mV) wird abgezogen; 8 statt 4 ADC-Messungen je Platz.
-  - **Fehler behoben**: Das erste Einschalten nach dem Start des Moduls galt als „warm“ (Ausblendung 20 statt
-    100 ms) – eine Lampe/ein Kondensator konnte den Kanal direkt nach dem Einschalten sperren.
-  - E8/E16: unverändert bis auf die Versionsnummer.
-- Verbindungstool: zeigt beim O8 „Ausgänge gesperrt: Lastspannung fehlt bzw. Anlaufsperre“ (Status Bit 3);
-  „O8-Sperren aufheben“ wirkt auch auf diese Sperre.
-- Host-Simulation: O8-Modell mit Q60-Freigabe und R602, neue Tests 6–9 (Lastspannung weg/zurück mit Leckversatz, Start ohne Lastspannung, langsames Abklingen, steigender Leckstrom); alle Tests bestanden.
-
-- **Modul-Firmware 1.3 und V15 15.2 nur zusammen verwenden** (IO-Rahmen hat jetzt 5 Byte mit dem erwarteten Modultyp).
-- **Fehler (unabhängige Prüfung 06.11.2026)**: Ein O8, das im Betrieb neu startete (Watchdog, Spannungseinbruch,
-  RESET), schaltete beim ersten IO-Rahmen sofort die alten Lastausgänge wieder ein. **Behebung**: Nach dem Start
-  schaltet ein Modul nichts, bis der Controller es neu identifiziert hat (Status Bit 2 „nicht identifiziert“);
-  der Controller fragt dann sofort IDENT und löscht beim O8 die Sollwerte (das Verbindungsprogramm setzt sie
-  innerhalb von 2 s neu).
-- **Fehler**: Ein O8 auf der Adresse eines E8/E16 (doppelte oder verstellte Adresse) hätte deren LED-Muster auf die
-  24-V-Lastausgänge gelegt. **Behebung**: Der IO-Rahmen enthält den erwarteten Modultyp, ein Modul mit anderem Typ
-  verwirft den Rahmen.
-- Controller V15: Geht die PC-Verbindung verloren (1,5 s), werden die Sollwerte aller Module gelöscht – sonst
-  schaltete die erste Zeile einer neuen Verbindung die O8-Ausgänge mit dem alten Zustand wieder ein. Ein neu
-  erkanntes O8 oder ein anderer Modultyp an einer Adresse beginnt ebenfalls mit AUS.
-- RS-485: Sender-Einschaltzeit vor dem ersten Byte 15 µs statt 4 µs (THVD1450 bis 10 µs).
-- O8: /OE der Schieberegister beim Start erst auf HIGH, dann als Ausgang (kein kurzer LOW-Puls); Fehlerschwelle
-  der Strommessung 3,25 V statt 3,15 V (weniger Fehlsperren bei Anlaufströmen um 2,3 A).
-- Verbindungstool: fragt die Modulliste alle 5 s neu ab („M?“), damit eine verlorene Meldung kein Modul dauerhaft
-  stumm schaltet. Ist ein Controller V15 angeschlossen, aber eine Platine ohne Bus eingestellt, werden keine
-  Modul-Indizes (≥ 16) geschaltet und Modul-Eingänge nicht als Tasten ausgewertet.
-- Modul-Firmware: Beschreibung, SWD-Flashskript (`modul_flashen.cmd`) und Host-Simulation (`Firmware_Modul/test`:
-  Controller + bis zu 10 Module am nachgebildeten Bus, Fuzz-Test des Rahmen-Parsers; alle Tests bestanden).
-
-### Verbindungstool – Firmware-Update über den Atmel-DFU (Controller V3.x) [in Arbeit]
-
-- **Fehler**: Auf Controller V3.3 mit Werks-DFU-Bootloader bricht das Update über das Verbindungstool mit
-  „Treiber fehlt“ ab, obwohl der WinUSB-Treiber installiert und gestartet ist (gemeldet 05.11.2026).
-- **Diagnose eingebaut**: Beim Öffnen des DFU-Bootloaders wird jetzt jeder Schritt (Registry, Schnittstellen-GUID,
-  Gerätesuche, Öffnen, WinUSB-Start) mit Windows-Fehlercode ins Protokoll („DFU-Diagnose“) und in die
-  Fehlermeldung geschrieben.
-- **Ursache gefunden**: Diagnose „GUIDs: 1; Pfade: 0“ – der installierte Treiber (libwdi/Zadig) trägt die
-  Schnittstellen-GUID ohne geschweifte Klammern ein, dadurch legt WinUSB keine eigene Schnittstelle an und das
-  Programm fand den Bootloader nicht. **Behebung**: Das Programm sucht zusätzlich über die allgemeine
-  USB-Geräteschnittstelle, die Windows für jedes USB-Gerät anlegt – unabhängig davon, womit der Treiber
-  installiert wurde.
-- **Protokoll kopierbar**: Im Reiter „Protokoll“, im Protokoll der Simulation und im Update-Fenster lassen sich
-  Zeilen markieren und kopieren (Strg+C, Strg+A, Rechtsklick-Menü). Solange Zeilen markiert sind, springt die
-  Liste nicht mehr ans Ende.
-- **UF2-Update (V5/V10/V15) geprüft statt blind**: Vor dem Schreiben wird die Prozessor-Kennung der Firmware
-  geprüft (RP2040 bzw. RP2350); beschrieben wird nur ein neu erschienenes Update-Laufwerk (ein schon vorhandenes
-  nur nach Rückfrage); bleibt das Laufwerk nach dem Schreiben stehen, wird ein Fehler gemeldet; Schreibsperren
-  (Gruppenrichtlinie, BitLocker To Go) werden verständlich gemeldet.
-- **Erfolg erst nach Bestätigung**: Nach jedem Firmware-Update wartet das Programm, bis sich die Platine wieder
-  meldet, und vergleicht die gemeldete Firmware-Version. Erst dann „aufgespielt“ (vorher immer, ohne Prüfung).
-- Befehl an die Platine wird bis zu sechsmal wiederholt, falls Windows den Anschluss nach dem Trennen noch nicht
-  freigegeben hat; jeder Schritt (U, UJ, 1200-Baud, Rückkehr der Platine) steht im Protokoll.
-
-### Firmware V5 – Kommentar zur neuen Freigabe der Ausgänge (05.11.2026)
-
-- Platine V5.1 (Layout ab 05.11.2026): ENABLE des DRV8860 hängt an GPIO20 (LED „PC“) mit Pull-down statt fest an
-  3,3 V. Die Firmware passt ohne Änderung (Ausgänge nur bei Verbindung, Daten jede ms neu); nur der Kommentar im
-  Quelltext wurde angepasst, kein neuer Build.
-
-### Firmware 4.5 – Update über das Verbindungstool ohne RESET-Taste (Controller V3.x mit Werks-DFU) [in Arbeit]
-
-- **Fehler**: Nach dem Befehl „U“ meldete sich eine Platine mit Werks-DFU-Bootloader nicht mehr, erst RESET half.
-- **Ursache**: Nach einem Watchdog-Neustart bleibt beim ATmega32U4 der Watchdog (15 ms) eingeschaltet, solange
-  das Reset-Flag WDRF steht. Die Firmware schaltete ihn nicht ab und startete deshalb endlos neu.
-- **Behebung**: Ganz am Anfang des Starts (.init3) wird die Reset-Ursache gesichert, WDRF gelöscht und der
-  Watchdog abgeschaltet. „U“/„UJ“ setzen jetzt beide Kennwörter (Arduino-Bootloader und Atmel-DFU) und lösen
-  einen Watchdog-Neustart aus; bei Werks-DFU springt die Firmware dann aus dem Grundzustand in den Bootloader
-  (bewährter Weg, wie QMK). Platinen mit Arduino-Bootloader verhalten sich wie bisher.
-
-SIGNATUR: 96C97E5A762E8304DC292D266D055D95D65B2CF611C8A06EA89ACC91492B15D19101807C8D3FC775ADFD59819E8D4DDCE266B3E794DE4E6E2A5C8B6C1603E5A9
+SIGNATUR: 27EBFEB75B677555598DFAA7C0A8FCD78CE5BA1B08F762FB22DEB604BA1FC60DEF2DA6BD6393B36D79B94D6B883E10AFA333DF835F21203E325B84217C0DBCC0
