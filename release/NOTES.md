@@ -1,11 +1,10 @@
-### Verbindungstool 2026.11.08.3 und Folien-Editor – Setup frischt das Programmsymbol auf, LED-Karte ohne Leerraum
+### Verbindungstool 2026.11.08.4 – Update mit Virenschutz-Prüfung ohne falsche Fehlermeldung
 
-- Folien-Editor: Ein vergrößertes oder verschobenes Icon wird auch bei Tasten mit Text nur noch am Außenrand der Taste
-  abgeschnitten, nicht mehr am Randabstand (es darf den Text überdecken).
-- Kopfzeile: Das „V“ von „VERBINDUNG“ wurde vom Hintergrund des Schriftzugs „CNC-PULT“ abgeschnitten – behoben.
-- Tasteneditor: Die LED-Karte wächst mit ihrem Inhalt – die Zeile für Ausgang/Achse/Variable erscheint nur, wenn die
-  gewählte Bedingung sie braucht; sonst steht der Hinweis direkt unter der Auswahl (kein leerer Platz mehr).
-- Setup: Nach Installation/Update wird der Windows-Symbolzwischenspeicher aufgefrischt (SHChangeNotify, ie4uinit -show),
-  damit Taskleiste, Startmenü und Desktop das neue Logo zeigen statt des alten aus dem Zwischenspeicher.
+- Setup im Update-Modus: Schlägt die Installation fehl (z. B. weil Norton CyberCapture das Setup zuerst abgeschottet
+  prüft und dort nichts geschrieben werden darf), wird nicht sofort „Update fehlgeschlagen“ gemeldet, sondern bis zu
+  2 Minuten still wiederholt („Warte auf Freigabe …“). Gibt der Virenschutz das Setup frei, läuft das Update ohne
+  Fehlermeldung durch; erst wenn es nach 2 Minuten immer noch nicht klappt, kommt die Meldung (dann ist auch nichts
+  verändert). Hat inzwischen eine freigegebene Kopie des Setups das Update erledigt (installierte Version = neue
+  Version), beendet sich die wartende Kopie still.
 
-SIGNATUR: 8E99152A1CC19808E9DEABB6E640096ABCE487FEAD5CBC7713FAFB1C269431A93B2BA124BEF6F3D69785957D559EF876EC6CC39A8218C8E7BFCDC34C8CCC0A13
+SIGNATUR: 06D52B437024DE3B6C197CEAEBC99B6B672C84B99D2438E3D908173FDA557CB00A0A05C3C90F24B42805D3D10759D3CA28B7615E7574ED52BB38D2C27FFB4D26
