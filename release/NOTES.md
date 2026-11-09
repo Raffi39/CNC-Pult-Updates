@@ -1,10 +1,25 @@
-### Verbindungstool 2026.11.08.4 – Update mit Virenschutz-Prüfung ohne falsche Fehlermeldung
+### Verbindungstool 2026.11.09.1 – neue Werkseinstellung, Handrad ausgeblendet, ohne Firmenname und Anschrift
 
-- Setup im Update-Modus: Schlägt die Installation fehl (z. B. weil Norton CyberCapture das Setup zuerst abgeschottet
-  prüft und dort nichts geschrieben werden darf), wird nicht sofort „Update fehlgeschlagen“ gemeldet, sondern bis zu
-  2 Minuten still wiederholt („Warte auf Freigabe …“). Gibt der Virenschutz das Setup frei, läuft das Update ohne
-  Fehlermeldung durch; erst wenn es nach 2 Minuten immer noch nicht klappt, kommt die Meldung (dann ist auch nichts
-  verändert). Hat inzwischen eine freigegebene Kopie des Setups das Update erledigt (installierte Version = neue
-  Version), beendet sich die wartende Kopie still.
+- Neue Werkseinstellung der Tasten und LEDs für die farbigen Controller (V3.3, V3.4, V5.1): Raffis aktuelle Belegung
+  (Stand 08.11.2026) ist als Vorgabe eingebettet (`Quelltext/Vorgaben/Tasten_V3.xml`). Sie gilt für neue Platinen,
+  „Werkseinstellung“ je Taste und „Alle Tasten auf Werkseinstellung“; bestehende Konfigurationen bleiben unverändert.
+  Fehlt die Vorgabe, gilt die bisherige Werkseinstellung.
+- Werkseinstellung im Reiter „Allgemein“ (außer EdingCNC-Pfaden) ebenfalls nach Raffis Werten: Hintergrundfarbe Weiß,
+  Haltezeit 1000 ms, Vorschub-Poti 50–150 % mit Raststelle 100 % ± 5 %, Spindel-Poti 50–200 %, Verfahren langsam/mittel/
+  schnell 10/50/80 %, Startwert „langsam“, Lieblingsfarben. Gilt nur für neue Installationen.
+- Folien-Editor: Standardbeschriftung JOG/FUNKTION passend zur neuen Tasten-Werkseinstellung.
+- Handbücher: Belegung und LED-Farben der Werkseinstellung neu, Abschnitt „Potis für Vorschub und Spindel“
+  (Empfehlung 10 kΩ linear, elektrische Daten je Controller), Maßzeichnungen und Einbaumaße der Tastenmodule;
+  Handrad-Abschnitte werden nur gebaut, wenn das Handrad freigegeben ist (`build.py` liest `Version.cs`).
+- Handrad vorerst ausgeblendet (noch nicht freigegeben): Reiter „Handrad“, Handrad-Betrieb (kein Zugriff auf den
+  Empfänger), Handrad-Anzeige in der Statuszeile sowie „W-Home (nur Handrad)“ und die LED-Quelle „Handrad aktiv“ in den
+  Auswahllisten sind nicht mehr sichtbar. Der Code bleibt erhalten; Freigabe über `AppInfo.HandradFreigegeben` in
+  `Version.cs`.
 
-SIGNATUR: 06D52B437024DE3B6C197CEAEBC99B6B672C84B99D2438E3D908173FDA557CB00A0A05C3C90F24B42805D3D10759D3CA28B7615E7574ED52BB38D2C27FFB4D26
+- Auf Wunsch von Raffi (09.11.2026) stehen im Verbindungstool, im Folien-Editor und in allen Dokumenten nur noch Name
+  und E-Mail (Raphael Kostka, raphael.kostka@web.de): kein „Kostka Engineering“ und keine Anschrift mehr (Kopfzeile,
+  Hilfe/Support, Protokoll-Reiter, Diagnose, Handbücher, Lizenz/Datenschutz/Sicherheitshinweise, Herausgeber im Setup).
+- Zertifikat-Skripte suchen das Signatur-Zertifikat jetzt nach „Raphael Kostka“ (passt auch zum bisherigen Zertifikat);
+  ein neu erstelltes Zertifikat heißt nur noch „Raphael Kostka“.
+
+SIGNATUR: 1FA733F4D2421D6A001A3B53CF283AA186C3614BE492CC80C9715B848661EFF5F1F7C56813572B92B6B5F26753907F5F16F803CE345393DB95405D16826EFDD8
